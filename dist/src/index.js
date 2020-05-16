@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const music_quizzer_1 = require("./music-quizzer");
+const music_quizzer_command_1 = require("./music-quizzer-command");
 const discord_js_1 = require("discord.js");
 const discord_js_commando_1 = require("discord.js-commando");
 const config_json_1 = require("../config.json");
@@ -23,7 +23,7 @@ const client = new discord_js_commando_1.CommandoClient({
 client.registry
     .registerDefaultTypes()
     .registerGroup('music')
-    .registerCommand(music_quizzer_1.MusicQuizzer);
+    .registerCommand(music_quizzer_command_1.MusicQuizzerCommand);
 client.once('ready', () => {
     console.log('Ready!');
     client.user.setActivity('Waiting');

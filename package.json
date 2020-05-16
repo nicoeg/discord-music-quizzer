@@ -14,13 +14,16 @@
     "@discordjs/opus": "^0.3.2",
     "discord.js": "^12.0.0",
     "discord.js-commando": "git+https://github.com/discordjs/Commando.git",
-    "ytdl-core": "^2.1.2"
+    "simple-youtube-api": "^5.2.1",
+    "spotify-web-api-node": "^4.0.0",
+    "ytdl-core-discord": "^1.2.0"
   },
   "devDependencies": {
-    "typescript": "^3.8.3",
-    "@types/node": "^13.13.5",
+    "@types/node": "^13.13.6",
+    "@types/spotify-web-api-node": "^4.0.1",
     "@types/ws": "^7.2.4",
-    "esbuild": "^0.2.9",
-    "opusscript": "0.0.7"
+    "esbuild": "^0.2.12",
+    "opusscript": "0.0.7",
+    "typescript": "^3.9.2"
   }
 }

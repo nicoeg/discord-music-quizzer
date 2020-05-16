@@ -1,4 +1,4 @@
-import { MusicQuizzer } from './music-quizzer';
+import { MusicQuizzerCommand } from './music-quizzer-command';
 import { Score } from './types/score';
 import { Song } from './types/song';
 import { Structures } from 'discord.js';
@@ -24,7 +24,7 @@ const client = new CommandoClient({
 client.registry
   .registerDefaultTypes()
   .registerGroup('music')
-  .registerCommand(MusicQuizzer)
+  .registerCommand(MusicQuizzerCommand)
 
 client.once('ready', () => {
   console.log('Ready!');
