@@ -41,7 +41,7 @@ export class MusicQuiz {
 
         //TODO: make sure to kill this when quiz is over
         const collector = this.message.channel
-            .createMessageCollector(() => true)
+            .createMessageCollector((message: CommandoMessage) => !message.author.bot)
             .on('collect', message => this.handleMessage(message))
     }
 
@@ -51,7 +51,8 @@ export class MusicQuiz {
         const song = this.songs[this.currentSong]
         const link = await this.findSong(song)
         this.musicStream = await ytdl(link)
-        const dispatcher = this.connection.play(this.musicStream, { type: 'opus' })
+        const dispatcher = this.connection
+            .play(this.musicStream, { type: 'opus' })
             .on('start', () => {
                 dispatcher.setVolume(.5)
             })
@@ -66,22 +67,27 @@ export class MusicQuiz {
         let score = this.scores[message.author.id] || 0
         let correct = false
 
-        if (message.content.toLowerCase() === song.title.toLowerCase()) {
-            score = score + 2
+        if (message.content.toLowerCase().includes(song.title.toLowerCase())) {
+            this.scores[message.author.id] = score + 2
             this.titleGuessed = true
             correct = true
             message.react('☑')
         }
 
-        if (message.content.toLowerCase() == song.artist.toLowerCase()) {
-            score = score + 3
+        if (message.content.toLowerCase().includes(song.artist.toLowerCase())) {
+            this.scores[message.author.id] = score + 3
             this.artistGuessed = true
             correct = true
             message.react('☑')
         }
 
         if (this.titleGuessed && this.artistGuessed) {
-            message.say('Song an author guessed!')
+            let status = 'Song guessed!\n'
+            status += `${song.title} by ${song.artist} \n`
+            status += `${song.link} \n\n`
+            status += this.getScores(message)
+            message.say(status)
+
             if (this.currentSong + 1 === this.songs.length) {
                 return this.finish
             }
@@ -100,6 +106,13 @@ export class MusicQuiz {
 
     }
 
+    getScores(message: CommandoMessage): string {
+        return message.member.voice.channel.members
+            .filter(member => member.displayName !== "Musiq Quizzer")
+            .map(member => `${member.nickname || member.displayName}: ${this.scores[member.id] || 0}`)
+            .join('\n')
+    }
+
     async getSongs(playlist: string, amount: number): Promise<Song[]> {
         const spotify = new Spotify()
         await spotify.authorize()
@@ -109,6 +122,8 @@ export class MusicQuiz {
                 .sort(() => Math.random() > 0.5 ? 1 : -1)
                 .filter((song, index) => index <= amount)
                 .map(song => ({
+                    link: `https://open.spotify.com/track/${song.id}`,
+                    previewUrl: song.preview_url,
                     title: this.stripSongName(song.name),
                     artist: (song.artists[0] || {}).name
                 }))
