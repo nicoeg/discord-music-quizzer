@@ -67,22 +67,23 @@ export class MusicQuiz {
         let score = this.scores[message.author.id] || 0
         let correct = false
 
-        if (message.content.toLowerCase().includes(song.title.toLowerCase())) {
-            this.scores[message.author.id] = score + 2
+        if (!this.titleGuessed && message.content.toLowerCase().includes(song.title.toLowerCase())) {
+            score = score + 2
             this.titleGuessed = true
             correct = true
             message.react('☑')
         }
 
-        if (message.content.toLowerCase().includes(song.artist.toLowerCase())) {
-            this.scores[message.author.id] = score + 3
+        if (!this.artistGuessed && message.content.toLowerCase().includes(song.artist.toLowerCase())) {
+            score = score + 3
             this.artistGuessed = true
             correct = true
             message.react('☑')
         }
+        this.scores[message.author.id] = score
 
         if (this.titleGuessed && this.artistGuessed) {
-            let status = 'Song guessed!\n'
+            let status = `Song guessed! (${this.currentSong + 1}/${this.songs.length})\n`
             status += `${song.title} by ${song.artist} \n`
             status += `${song.link} \n\n`
             status += this.getScores(message)
