@@ -1,4 +1,4 @@
-import { MessageAttachment, MessageCollector } from 'discord.js';
+import { MessageAttachment, MessageCollector, MessageEmbed } from 'discord.js';
 import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
 import { CommandoMessage } from 'discord.js-commando'
@@ -111,23 +111,26 @@ export class MusicQuiz {
     nextSong(status: string) {
         if (this.songTimeout) clearTimeout(this.songTimeout)
         const song = this.songs[this.currentSong]
-        status += `\n (${this.currentSong + 1}/${this.songs.length}) ${song.title} by ${song.artist} \n`
-        status += this.getScores(this.message)
-        this.message.channel.send(status, new MessageAttachment(song.link))
+        status = `**(${this.currentSong + 1}/${this.songs.length})** ${status} \n`
+        status += `${song.title} by ${song.artist} \n`
+        status += `${song.link} \n`
+        status += `**Scores**\n${this.getScores(this.message)}`
+        this.message.channel.send(status)
 
         if (this.currentSong + 1 === this.songs.length) {
             return this.finish()
         }
 
         this.currentSong++
-        this.musicStream.destroy()
+        if (this.musicStream) this.musicStream.destroy()
         this.startPlaying()
     }
 
     getScores(message: CommandoMessage): string {
         return message.member.voice.channel.members
             .filter(member => member.displayName !== "Musiq Quizzer")
-            .map(member => `${member.nickname || member.displayName}: ${this.scores[member.id] || 0}`)
+            .sort((first, second) => (this.scores[first.id] || 0) < (this.scores[second.id] || 0) ? 1 : -1)
+            .map(member => `**${this.scores[member.id] || 0}** ${member.nickname || member.displayName}`)
             .join('\n')
     }
 
