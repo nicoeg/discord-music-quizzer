@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MusicQuiz = void 0;
+const discord_js_1 = require("discord.js");
 const ytdl_core_discord_1 = __importDefault(require("ytdl-core-discord"));
 const spotify_1 = __importDefault(require("./spotify"));
 const simple_youtube_api_1 = __importDefault(require("simple-youtube-api"));
@@ -35,8 +36,7 @@ class MusicQuiz {
             this.currentSong = 0;
             this.scores = {};
             this.startPlaying();
-            //TODO: make sure to kill this when quiz is over
-            const collector = this.message.channel
+            this.messageCollector = this.message.channel
                 .createMessageCollector((message) => !message.author.bot)
                 .on('collect', message => this.handleMessage(message));
         });
@@ -48,22 +48,9 @@ class MusicQuiz {
             const song = this.songs[this.currentSong];
             const link = yield this.findSong(song);
             this.musicStream = yield ytdl_core_discord_1.default(link);
-            //this.musicStream = request(song.previewUrl)
-            //.pipe(fs.create('song1.mp3'))
-            console.log(song);
-            const dispatcher = this.connection
-                .play(this.musicStream, { type: 'opus' })
-                .on('start', () => {
-                dispatcher.setVolume(.5);
-            })
-                .on('finish', (info) => console.log(info))
-                .on('error', e => console.log(e, 'error'))
-                .on('exit', () => {
-                console.log('exit');
-                if (this.musicStream)
-                    this.musicStream.destroy();
-            });
-            console.log('wat');
+            this.connection
+                .play(this.musicStream, { type: 'opus', volume: .5 })
+                .on('finish', () => this.finish());
         });
     }
     handleMessage(message) {
@@ -98,18 +85,29 @@ class MusicQuiz {
     }
     finish() {
         return __awaiter(this, void 0, void 0, function* () {
+            if (this.messageCollector)
+                this.messageCollector.stop();
+            if (this.musicStream)
+                this.musicStream.destroy();
+            // @ts-ignore
+            if (this.message.guild.quiz)
+                this.message.guild.quiz = null;
         });
     }
     nextSong(status) {
+        if (this.songTimeout)
+            clearTimeout(this.songTimeout);
         const song = this.songs[this.currentSong];
         status += ` (${this.currentSong + 1}/${this.songs.length})\n`;
         status += `${song.title} by ${song.artist} \n`;
-        status += `${song.link} \n\n`;
         status += this.getScores(this.message);
-        this.message.say(status);
+        this.message.channel.send(status, new discord_js_1.MessageAttachment(song.link));
         if (this.currentSong + 1 === this.songs.length) {
-            return this.finish;
+            return this.finish();
         }
+        this.songTimeout = setTimeout(() => {
+            this.nextSong('Song was not guessed in timeout');
+        }, 1000 * 60);
         this.currentSong++;
         this.musicStream.destroy();
         this.startPlaying();
@@ -124,11 +122,13 @@ class MusicQuiz {
         return __awaiter(this, void 0, void 0, function* () {
             const spotify = new spotify_1.default();
             yield spotify.authorize();
+            if (playlist.includes('spotify.com/playlist')) {
+                playlist = playlist.match(/playlist\/([^?]+)/)[1] || playlist;
+            }
             try {
                 return (yield spotify.getPlaylist(playlist))
-                    .filter(song => song.preview_url !== null)
                     .sort(() => Math.random() > 0.5 ? 1 : -1)
-                    .filter((song, index) => index <= amount)
+                    .filter((song, index) => index < amount)
                     .map(song => ({
                     link: `https://open.spotify.com/track/${song.id}`,
                     previewUrl: song.preview_url,
@@ -138,7 +138,7 @@ class MusicQuiz {
             }
             catch (error) {
                 console.log(error);
-                this.message.say('Could not retrieve the playlist. Make sure it\'s public');
+                this.message.channel.send('Could not retrieve the playlist. Make sure it\'s public');
                 return;
             }
         });

@@ -1,5 +1,4 @@
-import { Message, MessageAttachment, MessageCollector } from 'discord.js';
-import { Score } from './types/score'
+import { MessageAttachment, MessageCollector } from 'discord.js';
 import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
 import { CommandoMessage } from 'discord.js-commando'
@@ -22,6 +21,7 @@ export class MusicQuiz {
     artistGuessed: boolean
     titleGuessed: boolean
     musicStream: internal.Readable
+    songTimeout: NodeJS.Timeout
 
     constructor(message: CommandoMessage, args: QuizArgs) {
         this.message = message
@@ -104,6 +104,7 @@ export class MusicQuiz {
     }
 
     nextSong(status: string) {
+        if (this.songTimeout) clearTimeout(this.songTimeout)
         const song = this.songs[this.currentSong]
         status += ` (${this.currentSong + 1}/${this.songs.length})\n`
         status += `${song.title} by ${song.artist} \n`
@@ -114,6 +115,9 @@ export class MusicQuiz {
             return this.finish()
         }
 
+        this.songTimeout = setTimeout(() => {
+            this.nextSong('Song was not guessed in timeout')
+        }, 1000 * 60);
         this.currentSong++
         this.musicStream.destroy()
         this.startPlaying()
@@ -136,7 +140,7 @@ export class MusicQuiz {
         try {
             return (await spotify.getPlaylist(playlist))
                 .sort(() => Math.random() > 0.5 ? 1 : -1)
-                .filter((song, index) => index <= amount)
+                .filter((song, index) => index < amount)
                 .map(song => ({
                     link: `https://open.spotify.com/track/${song.id}`,
                     previewUrl: song.preview_url,
