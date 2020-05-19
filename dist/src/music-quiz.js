@@ -27,9 +27,11 @@ class MusicQuiz {
     start() {
         return __awaiter(this, void 0, void 0, function* () {
             const channel = this.message.member.voice.channel;
-            this.connection = yield channel.join();
             this.songs = yield this.getSongs(this.arguments.playlist, parseInt(this.arguments.songs, 10));
-            console.log(this.songs);
+            if (this.songs === null) {
+                return;
+            }
+            this.connection = yield channel.join();
             this.currentSong = 0;
             this.scores = {};
             this.startPlaying();
@@ -46,46 +48,48 @@ class MusicQuiz {
             const song = this.songs[this.currentSong];
             const link = yield this.findSong(song);
             this.musicStream = yield ytdl_core_discord_1.default(link);
+            //this.musicStream = request(song.previewUrl)
+            //.pipe(fs.create('song1.mp3'))
+            console.log(song);
             const dispatcher = this.connection
                 .play(this.musicStream, { type: 'opus' })
                 .on('start', () => {
                 dispatcher.setVolume(.5);
             })
+                .on('finish', (info) => console.log(info))
+                .on('error', e => console.log(e, 'error'))
                 .on('exit', () => {
-                this.musicStream.destroy();
+                console.log('exit');
+                if (this.musicStream)
+                    this.musicStream.destroy();
             });
+            console.log('wat');
         });
     }
     handleMessage(message) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (message.content === "!skip") {
+                return this.nextSong('Song skipped!');
+            }
             const song = this.songs[this.currentSong];
             console.log(song);
             let score = this.scores[message.author.id] || 0;
             let correct = false;
-            if (message.content.toLowerCase().includes(song.title.toLowerCase())) {
-                this.scores[message.author.id] = score + 2;
+            if (!this.titleGuessed && message.content.toLowerCase().includes(song.title.toLowerCase())) {
+                score = score + 2;
                 this.titleGuessed = true;
                 correct = true;
                 message.react('☑');
             }
-            if (message.content.toLowerCase().includes(song.artist.toLowerCase())) {
-                this.scores[message.author.id] = score + 3;
+            if (!this.artistGuessed && message.content.toLowerCase().includes(song.artist.toLowerCase())) {
+                score = score + 3;
                 this.artistGuessed = true;
                 correct = true;
                 message.react('☑');
             }
+            this.scores[message.author.id] = score;
             if (this.titleGuessed && this.artistGuessed) {
-                let status = 'Song guessed!\n';
-                status += `${song.title} by ${song.artist} \n`;
-                status += `${song.link} \n\n`;
-                status += this.getScores(message);
-                message.say(status);
-                if (this.currentSong + 1 === this.songs.length) {
-                    return this.finish;
-                }
-                this.currentSong++;
-                this.musicStream.destroy();
-                this.startPlaying();
+                this.nextSong('Song guessed!');
             }
             if (!correct) {
                 message.react('❌');
@@ -95,6 +99,20 @@ class MusicQuiz {
     finish() {
         return __awaiter(this, void 0, void 0, function* () {
         });
+    }
+    nextSong(status) {
+        const song = this.songs[this.currentSong];
+        status += ` (${this.currentSong + 1}/${this.songs.length})\n`;
+        status += `${song.title} by ${song.artist} \n`;
+        status += `${song.link} \n\n`;
+        status += this.getScores(this.message);
+        this.message.say(status);
+        if (this.currentSong + 1 === this.songs.length) {
+            return this.finish;
+        }
+        this.currentSong++;
+        this.musicStream.destroy();
+        this.startPlaying();
     }
     getScores(message) {
         return message.member.voice.channel.members
@@ -108,6 +126,7 @@ class MusicQuiz {
             yield spotify.authorize();
             try {
                 return (yield spotify.getPlaylist(playlist))
+                    .filter(song => song.preview_url !== null)
                     .sort(() => Math.random() > 0.5 ? 1 : -1)
                     .filter((song, index) => index <= amount)
                     .map(song => ({
@@ -119,6 +138,8 @@ class MusicQuiz {
             }
             catch (error) {
                 console.log(error);
+                this.message.say('Could not retrieve the playlist. Make sure it\'s public');
+                return;
             }
         });
     }
@@ -133,10 +154,13 @@ class MusicQuiz {
      * Will remove all excess from the song names
      * Examples:
      * death bed (coffee for your head) (feat. beabadoobee) -> death bed
+     * Dragostea Din Tei - DJ Ross Radio Remix -> Dragostea Din Tei
+     *
      * @param name string
      */
     stripSongName(name) {
-        return name.replace(/ \(.*\)/g, '');
+        return name.replace(/ \(.*\)/g, '')
+            .replace(/ - .*$/, '');
     }
 }
 exports.MusicQuiz = MusicQuiz;

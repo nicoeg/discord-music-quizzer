@@ -1,3 +1,4 @@
+import { Message } from 'discord.js';
 import { Score } from './types/score'
 import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
@@ -8,6 +9,8 @@ import { youtubeApiKey } from '../config.json'
 import { Song } from 'song'
 import { VoiceConnection } from 'discord.js'
 import internal from 'stream'
+import { request } from 'https';
+import fs from 'fs'
 
 export class MusicQuiz {
     youtube = new YouTube(youtubeApiKey)
@@ -28,13 +31,16 @@ export class MusicQuiz {
 
     async start() {
         const channel = this.message.member.voice.channel
-        this.connection = await channel.join()
-
         this.songs = await this.getSongs(
             this.arguments.playlist,
             parseInt(this.arguments.songs, 10)
         )
-        console.log(this.songs);
+
+        if (this.songs === null) {
+            return
+        }
+
+        this.connection = await channel.join()
         this.currentSong = 0
         this.scores = {}
         this.startPlaying()
@@ -51,17 +57,22 @@ export class MusicQuiz {
         const song = this.songs[this.currentSong]
         const link = await this.findSong(song)
         this.musicStream = await ytdl(link)
+
         const dispatcher = this.connection
             .play(this.musicStream, { type: 'opus' })
             .on('start', () => {
                 dispatcher.setVolume(.5)
             })
             .on('exit', () => {
-                this.musicStream.destroy()
+                if (this.musicStream) this.musicStream.destroy()
             })
     }
 
     async handleMessage(message: CommandoMessage) {
+        if (message.content === "!skip") {
+            return this.nextSong('Song skipped!')
+        }
+
         const song = this.songs[this.currentSong]
         console.log(song);
         let score = this.scores[message.author.id] || 0
@@ -83,19 +94,7 @@ export class MusicQuiz {
         this.scores[message.author.id] = score
 
         if (this.titleGuessed && this.artistGuessed) {
-            let status = `Song guessed! (${this.currentSong + 1}/${this.songs.length})\n`
-            status += `${song.title} by ${song.artist} \n`
-            status += `${song.link} \n\n`
-            status += this.getScores(message)
-            message.say(status)
-
-            if (this.currentSong + 1 === this.songs.length) {
-                return this.finish
-            }
-
-            this.currentSong++
-            this.musicStream.destroy()
-            this.startPlaying()
+            this.nextSong('Song guessed!')
         }
 
         if (!correct) {
@@ -105,6 +104,23 @@ export class MusicQuiz {
 
     async finish() {
 
+    }
+
+    nextSong(status: string) {
+        const song = this.songs[this.currentSong]
+        status += ` (${this.currentSong + 1}/${this.songs.length})\n`
+        status += `${song.title} by ${song.artist} \n`
+        status += `${song.link} \n\n`
+        status += this.getScores(this.message)
+        this.message.channel.send(status)
+
+        if (this.currentSong + 1 === this.songs.length) {
+            return this.finish
+        }
+
+        this.currentSong++
+        this.musicStream.destroy()
+        this.startPlaying()
     }
 
     getScores(message: CommandoMessage): string {
@@ -130,6 +146,10 @@ export class MusicQuiz {
                 }))
         } catch (error) {
             console.log(error);
+
+            this.message.channel.send('Could not retrieve the playlist. Make sure it\'s public')
+
+            return
         }
     }
 
@@ -147,9 +167,12 @@ export class MusicQuiz {
      * Will remove all excess from the song names
      * Examples:
      * death bed (coffee for your head) (feat. beabadoobee) -> death bed
+     * Dragostea Din Tei - DJ Ross Radio Remix -> Dragostea Din Tei
+     *
      * @param name string
      */
     stripSongName(name: string): string {
         return name.replace(/ \(.*\)/g, '')
+            .replace(/ - .*$/, '')
     }
 }
