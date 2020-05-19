@@ -1,4 +1,4 @@
-import { Message, MessageAttachment } from 'discord.js';
+import { Message, MessageAttachment, MessageCollector } from 'discord.js';
 import { Score } from './types/score'
 import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
@@ -13,6 +13,7 @@ import internal from 'stream'
 export class MusicQuiz {
     youtube = new YouTube(youtubeApiKey)
     message: CommandoMessage
+    messageCollector: MessageCollector
     arguments: QuizArgs
     songs: Song[]
     currentSong: number = 0
@@ -43,8 +44,7 @@ export class MusicQuiz {
         this.scores = {}
         this.startPlaying()
 
-        //TODO: make sure to kill this when quiz is over
-        const collector = this.message.channel
+        this.messageCollector = this.message.channel
             .createMessageCollector((message: CommandoMessage) => !message.author.bot)
             .on('collect', message => this.handleMessage(message))
     }
@@ -56,14 +56,9 @@ export class MusicQuiz {
         const link = await this.findSong(song)
         this.musicStream = await ytdl(link)
 
-        const dispatcher = this.connection
-            .play(this.musicStream, { type: 'opus' })
-            .on('start', () => {
-                dispatcher.setVolume(.5)
-            })
-            .on('exit', () => {
-                if (this.musicStream) this.musicStream.destroy()
-            })
+        this.connection
+            .play(this.musicStream, { type: 'opus', volume: .5 })
+            .on('finish', () => this.finish())
     }
 
     async handleMessage(message: CommandoMessage) {
@@ -101,7 +96,11 @@ export class MusicQuiz {
     }
 
     async finish() {
+        if (this.messageCollector) this.messageCollector.stop()
+        if (this.musicStream) this.musicStream.destroy()
 
+        // @ts-ignore
+        if (this.message.guild.quiz) this.message.guild.quiz = null
     }
 
     nextSong(status: string) {
@@ -112,7 +111,7 @@ export class MusicQuiz {
         this.message.channel.send(status, new MessageAttachment(song.link))
 
         if (this.currentSong + 1 === this.songs.length) {
-            return this.finish
+            return this.finish()
         }
 
         this.currentSong++

@@ -1,45 +1,28 @@
-import { MusicQuizzerCommand } from './music-quizzer-command';
-import { Score } from './types/score';
-import { Song } from './types/song';
+import { MusicQuizCommand, StopMusicQuizCommand } from './commands';
 import { Structures } from 'discord.js';
 import { CommandoClient } from 'discord.js-commando';
 import { ownerID, token } from '../config.json'
+import { MusicQuiz } from './music-quiz';
 
 Structures.extend('Guild', Guild => {
   class MusicGuild extends Guild {
-    songs: Song[] = []
-    currentSong: Song = null
-    isPlaying = false
-    scores: Score[] = []
+    quiz: MusicQuiz
   }
 
   return MusicGuild;
 });
 
-const client = new CommandoClient({
-  commandPrefix: '!',
-  owner: ownerID
-});
+const client = new CommandoClient({ commandPrefix: '!', owner: ownerID });
 
 client.registry
   .registerDefaultTypes()
   .registerGroup('music')
-  .registerCommand(MusicQuizzerCommand)
+  .registerCommand(MusicQuizCommand)
+  .registerCommand(StopMusicQuizCommand)
 
 client.once('ready', () => {
   console.log('Ready!');
-  client.user.setActivity('Waiting');
-});
-
-client.on('guildMemberAdd', member => {
-  const channel = member.guild.channels.cache.find(ch => ch.name === 'general')
-  if (!channel) {
-    console.log('Could not find the general channel');
-
-    return
-  }
-
-//  channel.send(`Welcome ${member}!`);
+  client.user.setActivity('Ready');
 });
 
 client.login(token);
