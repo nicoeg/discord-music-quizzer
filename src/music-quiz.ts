@@ -54,7 +54,6 @@ export class MusicQuiz {
         this.titleGuessed = false
         this.artistGuessed = false
         const song = this.songs[this.currentSong]
-        console.log("playing song " + song.title);
         const link = await this.findSong(song)
         this.musicStream = await ytdl(link)
         this.songTimeout = setTimeout(() => {
@@ -76,7 +75,6 @@ export class MusicQuiz {
         }
 
         const song = this.songs[this.currentSong]
-        console.log(song);
         let score = this.scores[message.author.id] || 0
         let correct = false
 
@@ -134,7 +132,7 @@ export class MusicQuiz {
 
     getScores(message: CommandoMessage): string {
         return message.member.voice.channel.members
-            .filter(member => member.displayName !== "Musiq Quizzer")
+            .filter(member => member.user.username !== "Musiq Quizzer")
             .sort((first, second) => (this.scores[first.id] || 0) < (this.scores[second.id] || 0) ? 1 : -1)
             .map(member => `**${this.scores[member.id] || 0}** ${member.nickname || member.displayName}`)
             .join('\n')
