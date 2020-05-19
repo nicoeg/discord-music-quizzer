@@ -53,8 +53,12 @@ export class MusicQuiz {
         this.titleGuessed = false
         this.artistGuessed = false
         const song = this.songs[this.currentSong]
+        console.log("playing song " + song.title);
         const link = await this.findSong(song)
         this.musicStream = await ytdl(link)
+        this.songTimeout = setTimeout(() => {
+            this.nextSong('Song was not guessed in time')
+        }, 1000 * 60);
 
         this.connection
             .play(this.musicStream, { type: 'opus', volume: .5 })
@@ -96,6 +100,7 @@ export class MusicQuiz {
     }
 
     async finish() {
+        if (this.songTimeout) clearTimeout(this.songTimeout)
         if (this.messageCollector) this.messageCollector.stop()
         if (this.musicStream) this.musicStream.destroy()
 
@@ -106,8 +111,7 @@ export class MusicQuiz {
     nextSong(status: string) {
         if (this.songTimeout) clearTimeout(this.songTimeout)
         const song = this.songs[this.currentSong]
-        status += ` (${this.currentSong + 1}/${this.songs.length})\n`
-        status += `${song.title} by ${song.artist} \n`
+        status += `\n (${this.currentSong + 1}/${this.songs.length}) ${song.title} by ${song.artist} \n`
         status += this.getScores(this.message)
         this.message.channel.send(status, new MessageAttachment(song.link))
 
@@ -115,9 +119,6 @@ export class MusicQuiz {
             return this.finish()
         }
 
-        this.songTimeout = setTimeout(() => {
-            this.nextSong('Song was not guessed in timeout')
-        }, 1000 * 60);
         this.currentSong++
         this.musicStream.destroy()
         this.startPlaying()
