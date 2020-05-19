@@ -1,4 +1,4 @@
-import { MessageAttachment, MessageCollector, MessageEmbed } from 'discord.js';
+import { MessageAttachment, MessageCollector, MessageEmbed, VoiceChannel } from 'discord.js';
 import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
 import { CommandoMessage } from 'discord.js-commando'
@@ -12,6 +12,7 @@ import internal from 'stream'
 export class MusicQuiz {
     youtube = new YouTube(youtubeApiKey)
     message: CommandoMessage
+    voiceChannel: VoiceChannel
     messageCollector: MessageCollector
     arguments: QuizArgs
     songs: Song[]
@@ -29,7 +30,7 @@ export class MusicQuiz {
     }
 
     async start() {
-        const channel = this.message.member.voice.channel
+        this.voiceChannel = this.message.member.voice.channel
         this.songs = await this.getSongs(
             this.arguments.playlist,
             parseInt(this.arguments.songs, 10)
@@ -39,7 +40,7 @@ export class MusicQuiz {
             return
         }
 
-        this.connection = await channel.join()
+        this.connection = await this.voiceChannel.join()
         this.currentSong = 0
         this.scores = {}
         this.startPlaying()
@@ -66,6 +67,10 @@ export class MusicQuiz {
     }
 
     async handleMessage(message: CommandoMessage) {
+        if (message.content === "!stop-music-quiz") {
+            return
+        }
+
         if (message.content === "!skip") {
             return this.nextSong('Song skipped!')
         }
@@ -106,6 +111,7 @@ export class MusicQuiz {
 
         // @ts-ignore
         if (this.message.guild.quiz) this.message.guild.quiz = null
+        this.voiceChannel.leave()
     }
 
     nextSong(status: string) {
