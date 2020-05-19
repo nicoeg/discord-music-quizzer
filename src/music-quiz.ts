@@ -9,8 +9,6 @@ import { youtubeApiKey } from '../config.json'
 import { Song } from 'song'
 import { VoiceConnection } from 'discord.js'
 import internal from 'stream'
-import { request } from 'https';
-import fs from 'fs'
 
 export class MusicQuiz {
     youtube = new YouTube(youtubeApiKey)
@@ -133,6 +131,9 @@ export class MusicQuiz {
     async getSongs(playlist: string, amount: number): Promise<Song[]> {
         const spotify = new Spotify()
         await spotify.authorize()
+        if (playlist.includes('spotify.com/playlist')) {
+            playlist = playlist.match(/playlist\/([^?]+)/)[1] || playlist
+        }
 
         try {
             return (await spotify.getPlaylist(playlist))
