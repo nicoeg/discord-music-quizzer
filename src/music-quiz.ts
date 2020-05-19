@@ -1,4 +1,4 @@
-import { Message } from 'discord.js';
+import { Message, MessageAttachment } from 'discord.js';
 import { Score } from './types/score'
 import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
@@ -108,9 +108,8 @@ export class MusicQuiz {
         const song = this.songs[this.currentSong]
         status += ` (${this.currentSong + 1}/${this.songs.length})\n`
         status += `${song.title} by ${song.artist} \n`
-        status += `${song.link} \n\n`
         status += this.getScores(this.message)
-        this.message.channel.send(status)
+        this.message.channel.send(status, new MessageAttachment(song.link))
 
         if (this.currentSong + 1 === this.songs.length) {
             return this.finish
