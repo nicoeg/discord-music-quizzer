@@ -34,6 +34,10 @@ export class MusicQuizCommand extends Command {
             return message.say('Quiz is already running')
         }
 
+        if (message.member.voice.channel === null) {
+            return message.say('Please join a voice channel and try again')
+        }
+
         // @ts-ignore
         message.guild.quiz = new MusicQuiz(message, args)
         // @ts-ignore
