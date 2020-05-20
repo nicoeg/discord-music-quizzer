@@ -12,8 +12,8 @@ declare global {
     interface ProcessEnv {
       PREFIX: string
       DISCORD_TOKEN: string
+      DISCORD_OWNER_ID: string
       YOUTUBE_API_KEY: string
-      OWNER_ID: string
       SPOTIFY_CLIENT_ID: string
       SPOTIFY_CLIENT_SECRET: string
     }
@@ -28,7 +28,10 @@ Structures.extend('Guild', Guild => {
   return MusicGuild
 })
 
-const client = new CommandoClient({ commandPrefix: process.env.PREFIX, owner: process.env.OWNER_ID })
+const client = new CommandoClient({
+  commandPrefix: process.env.PREFIX,
+  owner: process.env.DISCORD_OWNER_ID
+})
 
 client.registry
   .registerDefaultTypes()
