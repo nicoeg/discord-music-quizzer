@@ -1,11 +1,9 @@
 import SpotifyApi from 'spotify-web-api-node'
-import config from '../config.json'
-
 
 export default class Spotify {
     client = new SpotifyApi({
-        clientId: config.spotify.clientID,
-        clientSecret: config.spotify.clientSecret
+        clientId: process.env.SPOTIFY_CLIENT_ID,
+        clientSecret: process.env.SPOTIFY_CLIENT_SECRET
     })
 
     async authorize() {
