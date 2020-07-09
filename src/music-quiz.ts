@@ -4,12 +4,12 @@ import { QuizArgs } from './types/quiz-args'
 import { CommandoMessage } from 'discord.js-commando'
 import Spotify from './spotify'
 import YouTube from 'simple-youtube-api'
+import Youtube from 'scrape-youtube'
 import { Song } from 'song'
 import { VoiceConnection } from 'discord.js'
 import internal from 'stream'
 
 export class MusicQuiz {
-    youtube = new YouTube(process.env.YOUTUBE_API_KEY)
     message: CommandoMessage
     voiceChannel: VoiceChannel
     messageCollector: MessageCollector
@@ -164,13 +164,9 @@ export class MusicQuiz {
     }
 
     async findSong(song: Song): Promise<string> {
-        const result = await this.youtube.search(
-            `${song.title} - ${song.artist}`,
-            1,
-            { type: 'video', videoCategoryId: 10 }
-        )
+        const result = await Youtube.searchOne(`${song.title} - ${song.artist}`)
 
-        return result[0]?.url
+        return result?.link
     }
 
     /**
