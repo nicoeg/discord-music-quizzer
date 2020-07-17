@@ -1,4 +1,4 @@
-import { MessageAttachment, MessageCollector, MessageEmbed, VoiceChannel } from 'discord.js';
+import { MessageCollector, VoiceChannel } from 'discord.js';
 import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
 import { CommandoMessage } from 'discord.js-commando'
@@ -53,6 +53,12 @@ export class MusicQuiz {
         this.titleGuessed = false
         this.artistGuessed = false
         const song = this.songs[this.currentSong]
+        if (!song) {
+            this.nextSong('Could not find the song on Youtube. Skipping to next.')
+
+            return
+        }
+
         const link = await this.findSong(song)
         this.musicStream = await ytdl(link)
         this.songTimeout = setTimeout(() => {
@@ -164,9 +170,16 @@ export class MusicQuiz {
     }
 
     async findSong(song: Song): Promise<string> {
-        const result = await Youtube.searchOne(`${song.title} - ${song.artist}`)
+        try {
+            const result = await Youtube.searchOne(`${song.title} - ${song.artist}`)
 
-        return result?.link
+            return result?.link
+        } catch (e) {
+            await this.message.channel.send('Oh no... Youtube police busted the party :(')
+            this.finish()
+
+            throw e
+        }
     }
 
     /**
