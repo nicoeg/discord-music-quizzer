@@ -1,5 +1,5 @@
-import { MusicQuizCommand, StopMusicQuizCommand } from './commands'
-import { Structures } from 'discord.js'
+import { MusicQuizCommand } from './commands'
+import { Structures, Guild } from 'discord.js'
 import { CommandoClient } from 'discord.js-commando'
 import { config } from 'dotenv'
 import { MusicQuiz } from './music-quiz'
@@ -12,55 +12,60 @@ config({ path: path.resolve(__dirname, '../.env') })
 global.__rootdir__ = __dirname || process.cwd()
 
 declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-      PREFIX: string
-      DISCORD_TOKEN: string
-      DISCORD_OWNER_ID: string
-      YOUTUBE_API_KEY: string
-      SPOTIFY_CLIENT_ID: string
-      SPOTIFY_CLIENT_SECRET: string
-      SENTRY_DSN: string
+    namespace NodeJS {
+        interface ProcessEnv {
+            PREFIX: string
+            DISCORD_TOKEN: string
+            DISCORD_OWNER_ID: string
+            YOUTUBE_API_KEY: string
+            SPOTIFY_CLIENT_ID: string
+            SPOTIFY_CLIENT_SECRET: string
+            SENTRY_DSN: string
+        }
+        interface Global {
+            __rootdir__: string
+        }
     }
-    interface Global {
-      __rootdir__: string
+}
+
+declare module 'discord.js' {
+    interface Guild {
+        quiz: MusicQuiz
     }
-  }
 }
 
 if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    integrations: [
-      new RewriteFrames({
-        root: global.__rootdir__
-      })
-    ]
-  })
+    Sentry.init({
+        dsn: process.env.SENTRY_DSN,
+        integrations: [
+            new RewriteFrames({
+                root: global.__rootdir__
+            })
+        ]
+    })
 }
 
 Structures.extend('Guild', Guild => {
-  class MusicGuild extends Guild {
-    quiz: MusicQuiz
-  }
+    class MusicGuild extends Guild {
+        quiz: MusicQuiz
+    }
 
-  return MusicGuild
+    return MusicGuild
 })
 
 const client = new CommandoClient({
-  commandPrefix: process.env.PREFIX,
-  owner: process.env.DISCORD_OWNER_ID
+    commandPrefix: process.env.PREFIX,
+    owner: process.env.DISCORD_OWNER_ID
 })
 
 client.registry
-  .registerDefaultTypes()
-  .registerGroup('music')
-  .registerCommand(MusicQuizCommand)
-  .registerCommand(StopMusicQuizCommand)
+.registerDefaultTypes()
+.registerGroup('music')
+.registerCommand(MusicQuizCommand)
 
 client.once('ready', () => {
-  console.log('Ready!')
-  client.user.setActivity('Ready to quiz')
+    console.log('Ready!')
+    client.user.setActivity('Ready to quiz')
 })
 
 client.login(process.env.DISCORD_TOKEN)

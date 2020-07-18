@@ -29,7 +29,6 @@ export class MusicQuizCommand extends Command {
     }
 
     async run(message: CommandoMessage, args: QuizArgs, fromPattern: boolean): Promise<Message | Message[]> {
-        // @ts-ignore
         if (message.guild.quiz) {
             return message.say('Quiz is already running')
         }
@@ -38,37 +37,7 @@ export class MusicQuizCommand extends Command {
             return message.say('Please join a voice channel and try again')
         }
 
-        // @ts-ignore
         message.guild.quiz = new MusicQuiz(message, args)
-        // @ts-ignore
         message.guild.quiz.start()
-
-        return message.say(`Hold on. Starting quiz!`)
-    }
-}
-
-export class StopMusicQuizCommand extends Command {
-    constructor(client: CommandoClient) {
-        super(client, {
-            name: 'stop-music-quiz',
-            memberName: 'stop-music-quizzer',
-            group: 'music',
-            description: 'Stop the Music Quiz',
-            guildOnly: true,
-            throttling: {usages: 1, duration: 10},
-            args: []
-        })
-    }
-
-    async run(message: CommandoMessage, args: QuizArgs, fromPattern: boolean): Promise<Message | Message[]> {
-        // @ts-ignore
-        if (!message.guild.quiz) {
-            return message.say(`No quiz is running`)
-        }
-
-        // @ts-ignore
-        message.guild.quiz.finish()
-
-        return message.say('Quiz stopped')
     }
 }

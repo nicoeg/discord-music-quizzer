@@ -3,7 +3,6 @@ import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
 import { CommandoMessage } from 'discord.js-commando'
 import Spotify from './spotify'
-import YouTube from 'simple-youtube-api'
 import Youtube from 'scrape-youtube'
 import { Song } from 'song'
 import { VoiceConnection } from 'discord.js'
@@ -52,6 +51,21 @@ export class MusicQuiz {
 
         this.currentSong = 0
         this.scores = {}
+        this.textChannel.send(`
+            **Let's get started**! :headphones: :tada:
+            **${this.songs.length}** songs have been selected randomly from the playlist.
+            You have one minute to guess each song.
+
+            Guess the song and artist by typing in chat. Points are awarded as follows:
+            > Artist - **3 points**
+            > Title - **2 points**
+            > Artist + title - **5 points**
+
+            Type \`!skip\` to continue to the next song.
+            Type \`!stop\` to stop the quiz.
+
+            - GLHF :microphone:
+        `.replace(/  +/g, ''))
         this.startPlaying()
 
         this.messageCollector = this.textChannel
@@ -82,11 +96,14 @@ export class MusicQuiz {
     }
 
     async handleMessage(message: CommandoMessage) {
-        if (message.content === "!stop-music-quiz") {
+        if (message.content === '!stop') {
+            await this.printStatus('Quiz stopped!')
+            await this.finish()
+
             return
         }
 
-        if (message.content === "!skip") {
+        if (message.content === '!skip') {
             return this.nextSong('Song skipped!')
         }
 
@@ -123,19 +140,13 @@ export class MusicQuiz {
         if (this.messageCollector) this.messageCollector.stop()
         if (this.musicStream) this.musicStream.destroy()
 
-        // @ts-ignore
-        if (this.message.guild.quiz) this.message.guild.quiz = null
+        if (this.guild.quiz) this.guild.quiz = null
         this.voiceChannel.leave()
     }
 
     nextSong(status: string) {
         if (this.songTimeout) clearTimeout(this.songTimeout)
-        const song = this.songs[this.currentSong]
-        status = `**(${this.currentSong + 1}/${this.songs.length})** ${status} \n`
-        status += `${song.title} by ${song.artist} \n`
-        status += `${song.link} \n`
-        status += `**Scores**\n${this.getScores()}`
-        this.textChannel.send(status)
+        this.printStatus(status)
 
         if (this.currentSong + 1 === this.songs.length) {
             return this.finish()
@@ -146,11 +157,35 @@ export class MusicQuiz {
         this.startPlaying()
     }
 
+    async printStatus(message: string) {
+        const song = this.songs[this.currentSong]
+        await this.textChannel.send(`
+            **(${this.currentSong + 1}/${this.songs.length})** ${message}
+            > **${song.title}** by **${song.artist}**
+            > Link: || ${song.link} ||
+
+            **__SCORES__**
+            ${this.getScores()}
+        `.replace(/  +/g, ''))
+    }
+
     getScores(): string {
         return this.voiceChannel.members
-            .filter(member => member.user.username !== "Musiq Quizzer")
+            .filter(member => !member.user.bot)
+            .array()
             .sort((first, second) => (this.scores[first.id] || 0) < (this.scores[second.id] || 0) ? 1 : -1)
-            .map(member => `**${this.scores[member.id] || 0}** ${member.nickname || member.displayName}`)
+            .map((member, index) => {
+                let position = `**${index + 1}.** `
+                if (index === 0) {
+                    position = ':first_place:'
+                } else if (index === 1) {
+                    position = ':second_place:'
+                } else if (index === 3) {
+                    position = ':third_place:'
+                }
+
+                return `${position} <@!${member.id}> ${this.scores[member.id] || 0} points`
+            })
             .join('\n')
     }
 
