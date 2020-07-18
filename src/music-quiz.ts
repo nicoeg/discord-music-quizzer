@@ -1,4 +1,4 @@
-import { MessageCollector, VoiceChannel } from 'discord.js';
+import { MessageCollector, VoiceChannel, TextChannel, Guild, DMChannel } from 'discord.js';
 import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
 import { CommandoMessage } from 'discord.js-commando'
@@ -10,7 +10,8 @@ import { VoiceConnection } from 'discord.js'
 import internal from 'stream'
 
 export class MusicQuiz {
-    message: CommandoMessage
+    guild: Guild
+    textChannel: TextChannel|DMChannel
     voiceChannel: VoiceChannel
     messageCollector: MessageCollector
     arguments: QuizArgs
@@ -24,12 +25,13 @@ export class MusicQuiz {
     songTimeout: NodeJS.Timeout
 
     constructor(message: CommandoMessage, args: QuizArgs) {
-        this.message = message
+        this.guild = message.guild
+        this.textChannel = message.channel
+        this.voiceChannel = message.member.voice.channel
         this.arguments = args
     }
 
     async start() {
-        this.voiceChannel = this.message.member.voice.channel
         this.songs = await this.getSongs(
             this.arguments.playlist,
             parseInt(this.arguments.songs, 10)
@@ -44,7 +46,7 @@ export class MusicQuiz {
         try {
             this.connection = await this.voiceChannel.join()
         } catch (e) {
-            await this.message.channel.send('Could not join voice channel. Is it full?')
+            await this.textChannel.send('Could not join voice channel. Is it full?')
             await this.finish()
         }
 
@@ -52,7 +54,7 @@ export class MusicQuiz {
         this.scores = {}
         this.startPlaying()
 
-        this.messageCollector = this.message.channel
+        this.messageCollector = this.textChannel
             .createMessageCollector((message: CommandoMessage) => !message.author.bot)
             .on('collect', message => this.handleMessage(message))
     }
@@ -132,8 +134,8 @@ export class MusicQuiz {
         status = `**(${this.currentSong + 1}/${this.songs.length})** ${status} \n`
         status += `${song.title} by ${song.artist} \n`
         status += `${song.link} \n`
-        status += `**Scores**\n${this.getScores(this.message)}`
-        this.message.channel.send(status)
+        status += `**Scores**\n${this.getScores()}`
+        this.textChannel.send(status)
 
         if (this.currentSong + 1 === this.songs.length) {
             return this.finish()
@@ -144,8 +146,8 @@ export class MusicQuiz {
         this.startPlaying()
     }
 
-    getScores(message: CommandoMessage): string {
-        return message.member.voice.channel.members
+    getScores(): string {
+        return this.voiceChannel.members
             .filter(member => member.user.username !== "Musiq Quizzer")
             .sort((first, second) => (this.scores[first.id] || 0) < (this.scores[second.id] || 0) ? 1 : -1)
             .map(member => `**${this.scores[member.id] || 0}** ${member.nickname || member.displayName}`)
@@ -170,7 +172,7 @@ export class MusicQuiz {
                     artist: (song.artists[0] || {}).name
                 }))
         } catch (error) {
-            this.message.channel.send('Could not retrieve the playlist. Make sure it\'s public')
+            this.textChannel.send('Could not retrieve the playlist. Make sure it\'s public')
 
             return null
         }
@@ -182,7 +184,7 @@ export class MusicQuiz {
 
             return result?.link ?? null
         } catch (e) {
-            await this.message.channel.send('Oh no... Youtube police busted the party :(\nPlease try again later.')
+            await this.textChannel.send('Oh no... Youtube police busted the party :(\nPlease try again later.')
             this.finish()
 
             throw e
