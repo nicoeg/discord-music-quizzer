@@ -41,7 +41,13 @@ export class MusicQuiz {
             return
         }
 
-        this.connection = await this.voiceChannel.join()
+        try {
+            this.connection = await this.voiceChannel.join()
+        } catch (e) {
+            await this.message.channel.send('Could not join voice channel. Is it full?')
+            await this.finish()
+        }
+
         this.currentSong = 0
         this.scores = {}
         this.startPlaying()
