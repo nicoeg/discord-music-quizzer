@@ -20,6 +20,7 @@ declare global {
       YOUTUBE_API_KEY: string
       SPOTIFY_CLIENT_ID: string
       SPOTIFY_CLIENT_SECRET: string
+      SENTRY_DSN: string
     }
     interface Global {
       __rootdir__: string
@@ -27,14 +28,16 @@ declare global {
   }
 }
 
-Sentry.init({
-  dsn: 'https://63997f9fe0fa441ab00f6ff3926a2bb6@o100813.ingest.sentry.io/5342359',
-  integrations: [
-    new RewriteFrames({
-      root: global.__rootdir__
-    })
-  ]
-})
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    integrations: [
+      new RewriteFrames({
+        root: global.__rootdir__
+      })
+    ]
+  })
+}
 
 Structures.extend('Guild', Guild => {
   class MusicGuild extends Guild {
