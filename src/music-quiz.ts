@@ -35,7 +35,9 @@ export class MusicQuiz {
             parseInt(this.arguments.songs, 10)
         )
 
-        if (this.songs === null) {
+        if (!this.songs) {
+            this.finish()
+
             return
         }
 
@@ -161,11 +163,9 @@ export class MusicQuiz {
                     artist: (song.artists[0] || {}).name
                 }))
         } catch (error) {
-            console.log(error);
-
             this.message.channel.send('Could not retrieve the playlist. Make sure it\'s public')
 
-            return
+            return null
         }
     }
 
