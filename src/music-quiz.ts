@@ -16,6 +16,7 @@ export class MusicQuiz {
     arguments: QuizArgs
     songs: Song[]
     currentSong: number = 0
+    skippers: string[] = []
     connection: VoiceConnection
     scores: {[key: string]: number}
     artistGuessed: boolean
@@ -61,7 +62,7 @@ export class MusicQuiz {
             > Title - **2 points**
             > Artist + title - **5 points**
 
-            Type \`!skip\` to continue to the next song.
+            Type \`!skip\` to vote for continuing to the next song.
             Type \`!stop\` to stop the quiz.
 
             - GLHF :microphone:
@@ -96,15 +97,17 @@ export class MusicQuiz {
     }
 
     async handleMessage(message: CommandoMessage) {
-        if (message.content === '!stop') {
+        if (message.content.toLowerCase() === '!stop') {
             await this.printStatus('Quiz stopped!')
             await this.finish()
 
             return
         }
 
-        if (message.content === '!skip') {
-            return this.nextSong('Song skipped!')
+        if (message.content.toLowerCase() === '!skip') {
+            await this.handleSkip(message.author.id)
+
+            return
         }
 
         const song = this.songs[this.currentSong]
@@ -135,6 +138,24 @@ export class MusicQuiz {
         }
     }
 
+    handleSkip(userID: string) {
+        if (this.skippers.includes(userID)) {
+            return
+        }
+
+        this.skippers.push(userID)
+
+        const members = this.voiceChannel.members
+            .filter(member => !member.user.bot)
+        if (this.skippers.length === members.size) {
+            this.nextSong('Song skipped!')
+
+            return
+        }
+
+        this.textChannel.send(`**(${this.skippers.length}/${members.size})** to skip the song`)
+    }
+
     async finish() {
         if (this.songTimeout) clearTimeout(this.songTimeout)
         if (this.messageCollector) this.messageCollector.stop()
@@ -153,6 +174,7 @@ export class MusicQuiz {
         }
 
         this.currentSong++
+        this.skippers = []
         if (this.musicStream) this.musicStream.destroy()
         this.startPlaying()
     }
