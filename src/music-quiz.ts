@@ -55,13 +55,14 @@ export class MusicQuiz {
         this.titleGuessed = false
         this.artistGuessed = false
         const song = this.songs[this.currentSong]
-        if (!song) {
+
+        const link = await this.findSong(song)
+        if (!link) {
             this.nextSong('Could not find the song on Youtube. Skipping to next.')
 
             return
         }
 
-        const link = await this.findSong(song)
         this.musicStream = await ytdl(link)
         this.songTimeout = setTimeout(() => {
             this.nextSong('Song was not guessed in time')
@@ -173,9 +174,9 @@ export class MusicQuiz {
         try {
             const result = await Youtube.searchOne(`${song.title} - ${song.artist}`)
 
-            return result?.link
+            return result?.link ?? null
         } catch (e) {
-            await this.message.channel.send('Oh no... Youtube police busted the party :(')
+            await this.message.channel.send('Oh no... Youtube police busted the party :(\nPlease try again later.')
             this.finish()
 
             throw e
