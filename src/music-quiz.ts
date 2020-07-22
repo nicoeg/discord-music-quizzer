@@ -48,6 +48,8 @@ export class MusicQuiz {
         } catch (e) {
             await this.textChannel.send('Could not join voice channel. Is it full?')
             await this.finish()
+            
+            return
         }
 
         this.currentSong = 0
