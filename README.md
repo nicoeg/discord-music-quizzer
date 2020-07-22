@@ -4,7 +4,7 @@ Start music quizzes from your Spotify playlists.
 The bot will select random songs from the playlist and find them on Youtube to play.
 Participants can the guess the songs and their authors by typing in chat.
 
-Use this [link](https://discordapp.com/api/oauth2/authorize?client_id=708602255632367616&scope=bot&permissions=0) to add the bot to your discord channel.
+Use this [link](https://discordapp.com/api/oauth2/authorize?client_id=708602255632367616&scope=bot&permissions=3147840) to add the bot to your discord channel.
 
 Bot is inspired by https://github.com/galnir/Master-Bot.
 
