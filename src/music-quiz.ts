@@ -77,8 +77,16 @@ export class MusicQuiz {
     }
 
     async startPlaying() {
-        this.titleGuessed = false
-        this.artistGuessed = false
+        
+        if (this.arguments.onlyThis.toLowerCase() === 'artist') {
+            this.titleGuessed = true
+        } else if (this.arguments.onlyThis.toLowerCase() === 'title') {
+            this.artistGuessed = true
+        } else if {
+            this.titleGuessed = false
+            this.artistGuessed = false 
+        }
+        
         const song = this.songs[this.currentSong]
 
         const link = await this.findSong(song)
@@ -206,6 +214,8 @@ export class MusicQuiz {
                     position = ':second_place:'
                 } else if (index === 3) {
                     position = ':third_place:'
+                } else if (index > 3) {
+                    position = index.'.'
                 }
 
                 return `${position} <@!${member.id}> ${this.scores[member.id] || 0} points`
