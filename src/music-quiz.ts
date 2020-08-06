@@ -2,8 +2,8 @@ import { MessageCollector, VoiceChannel, TextChannel, Guild, DMChannel } from 'd
 import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
 import { CommandoMessage } from 'discord.js-commando'
-import Spotify from './spotify'
-import Youtube from 'scrape-youtube'
+import Spotify from './services/spotify'
+import { Youtube } from './services/youtube'
 import { Song } from 'song'
 import { VoiceConnection } from 'discord.js'
 import internal from 'stream'
@@ -29,12 +29,14 @@ export class MusicQuiz {
     voiceStream: StreamDispatcher
     songTimeout: NodeJS.Timeout
     reactPermissionNotified: boolean = false
+    youtube: Youtube
 
     constructor(message: CommandoMessage, args: QuizArgs) {
         this.guild = message.guild
         this.textChannel = message.channel
         this.voiceChannel = message.member.voice.channel
         this.arguments = args
+        this.youtube = new Youtube()
     }
 
     async start() {
@@ -76,6 +78,7 @@ export class MusicQuiz {
 
             - GLHF :microphone:
         `.replace(/  +/g, ''))
+        await this.youtube.getProxies()
         this.startPlaying()
 
         this.messageCollector = this.textChannel
@@ -93,7 +96,7 @@ export class MusicQuiz {
         }
 
         const song = this.songs[this.currentSong]
-        const link = await this.findSong(song)
+        const link = await this.getSongLink(song)
         if (!link) {
             this.nextSong('Could not find the song on Youtube. Skipping to next.')
 
@@ -293,14 +296,12 @@ export class MusicQuiz {
         }
     }
 
-    async findSong(song: Song): Promise<string> {
+    async getSongLink(song: Song): Promise<string> {
         try {
-            const result = await Youtube.searchOne(`${song.title} - ${song.artist}`)
-
-            return result?.link ?? null
+            return await this.youtube.findSong(`${song.title} - ${song.artist}`)
         } catch (e) {
             await this.textChannel.send('Oh no... Youtube police busted the party :(\nPlease try again later.')
-            this.finish()
+            await this.finish()
 
             throw e
         }
