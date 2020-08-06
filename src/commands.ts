@@ -29,6 +29,7 @@ export class MusicQuizCommand extends Command {
                     prompt: 'Only this answer is required; artist, title or both',
                     type: 'string',
                     default: 'both'
+                }
             ]
         })
     }
