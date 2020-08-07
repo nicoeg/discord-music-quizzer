@@ -23,6 +23,13 @@ export class MusicQuizCommand extends Command {
                     prompt: 'How many songs the quiz will contain',
                     type: 'string',
                     default: 10
+                },
+                {
+                    key: 'only',
+                    prompt: 'Only this answer is required; artist, title or both',
+                    type: 'string',
+                    oneOf: ['artist', 'title', 'both'],
+                    default: 'both'
                 }
             ]
         })
