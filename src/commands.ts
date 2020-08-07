@@ -25,9 +25,10 @@ export class MusicQuizCommand extends Command {
                     default: 10
                 },
                 {
-                    key: 'onlyThis',
+                    key: 'only',
                     prompt: 'Only this answer is required; artist, title or both',
                     type: 'string',
+                    oneOf: ['artist', 'title', 'both'],
                     default: 'both'
                 }
             ]
