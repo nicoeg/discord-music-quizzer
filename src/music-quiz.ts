@@ -212,10 +212,8 @@ export class MusicQuiz {
                     position = ':first_place:'
                 } else if (index === 1) {
                     position = ':second_place:'
-                } else if (index === 3) {
+                } else if (index === 2) {
                     position = ':third_place:'
-                } else if (index > 3) {
-                    position = index.'.'
                 }
 
                 return `${position} <@!${member.id}> ${this.scores[member.id] || 0} points`
