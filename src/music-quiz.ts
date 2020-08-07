@@ -60,10 +60,7 @@ export class MusicQuiz {
             **${this.songs.length}** songs have been selected randomly from the playlist.
             You have one minute to guess each song.
 
-            Guess the song and artist by typing in chat. Points are awarded as follows:
-            > Artist - **3 points**
-            > Title - **2 points**
-            > Artist + title - **5 points**
+            ${this.pointText()}
 
             Type \`!skip\` to vote for continuing to the next song.
             Type \`!stop\` to stop the quiz.
@@ -287,5 +284,22 @@ export class MusicQuiz {
     stripSongName(name: string): string {
         return name.replace(/ \(.*\)/g, '')
             .replace(/ - .*$/, '')
+    }
+
+    pointText(): string {
+        if (this.arguments.only === 'artist') {
+            return 'Guess the artist of the song by typing in chat. When guessed corretly you are awarded **3 points**.'
+        }
+
+        if (this.arguments.only === 'title') {
+            return 'Guess the title of the song by typing in chat. When guessed corretly you are awarded **2 points**.'
+        }
+
+        return `
+            Guess the song and artist by typing in chat. Points are awarded as follows:
+            > Artist - **3 points**
+            > Title - **2 points**
+            > Artist + title - **5 points**
+        `.replace(/  +/g, '')
     }
 }
