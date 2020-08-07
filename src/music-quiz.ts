@@ -78,16 +78,14 @@ export class MusicQuiz {
     }
 
     async startPlaying() {
-        
-        if (this.arguments.onlyThis.toLowerCase() === 'artist') {
+        this.titleGuessed = false
+        this.artistGuessed = false
+        if (this.arguments.only.toLowerCase() === 'artist') {
             this.titleGuessed = true
-        } else if (this.arguments.onlyThis.toLowerCase() === 'title') {
+        } else if (this.arguments.only.toLowerCase() === 'title') {
             this.artistGuessed = true
-        } else if {
-            this.titleGuessed = false
-            this.artistGuessed = false 
         }
-        
+
         const song = this.songs[this.currentSong]
 
         const link = await this.findSong(song)
@@ -108,14 +106,15 @@ export class MusicQuiz {
     }
 
     async handleMessage(message: CommandoMessage) {
-        if (message.content.toLowerCase() === '!stop') {
+        const content = message.content.toLowerCase()
+        if (content === '!stop') {
             await this.printStatus('Quiz stopped!')
             await this.finish()
 
             return
         }
 
-        if (message.content.toLowerCase() === '!skip') {
+        if (content === '!skip') {
             await this.handleSkip(message.author.id)
 
             return
@@ -125,14 +124,14 @@ export class MusicQuiz {
         let score = this.scores[message.author.id] || 0
         let correct = false
 
-        if (!this.titleGuessed && message.content.toLowerCase().includes(song.title.toLowerCase())) {
+        if (!this.titleGuessed && content.includes(song.title.toLowerCase())) {
             score = score + 2
             this.titleGuessed = true
             correct = true
             await this.reactToMessage(message, '☑')
         }
 
-        if (!this.artistGuessed && message.content.toLowerCase().includes(song.artist.toLowerCase())) {
+        if (!this.artistGuessed && content.includes(song.artist.toLowerCase())) {
             score = score + 3
             this.artistGuessed = true
             correct = true
