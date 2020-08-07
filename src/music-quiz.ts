@@ -23,6 +23,7 @@ export class MusicQuiz {
     titleGuessed: boolean
     musicStream: internal.Readable
     songTimeout: NodeJS.Timeout
+    reactPermissionNotified: boolean = false
 
     constructor(message: CommandoMessage, args: QuizArgs) {
         this.guild = message.guild
@@ -48,7 +49,7 @@ export class MusicQuiz {
         } catch (e) {
             await this.textChannel.send('Could not join voice channel. Is it full?')
             await this.finish()
-            
+
             return
         }
 
@@ -120,14 +121,14 @@ export class MusicQuiz {
             score = score + 2
             this.titleGuessed = true
             correct = true
-            message.react('☑')
+            await this.reactToMessage(message, '☑')
         }
 
         if (!this.artistGuessed && message.content.toLowerCase().includes(song.artist.toLowerCase())) {
             score = score + 3
             this.artistGuessed = true
             correct = true
-            message.react('☑')
+            await this.reactToMessage(message, '☑')
         }
         this.scores[message.author.id] = score
 
@@ -136,7 +137,7 @@ export class MusicQuiz {
         }
 
         if (!correct) {
-            message.react('❌')
+            await this.reactToMessage(message, '❌')
         }
     }
 
@@ -211,6 +212,24 @@ export class MusicQuiz {
                 return `${position} <@!${member.id}> ${this.scores[member.id] || 0} points`
             })
             .join('\n')
+    }
+
+    async reactToMessage(message: CommandoMessage, emoji: string) {
+        try {
+            await message.react(emoji)
+        } catch (e) {
+            if (this.reactPermissionNotified) {
+                return
+            }
+
+            this.reactPermissionNotified = true
+            this.textChannel.send(`
+                Please give me permission to react to messages.
+                You can easily do this by clicking the following link and adding me to your server again.
+                https://discordapp.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&scope=bot&permissions=3147840
+            `.replace(/  +/g, ''))
+        }
+
     }
 
     async getSongs(playlist: string, amount: number): Promise<Song[]> {

@@ -15,6 +15,7 @@ declare global {
     namespace NodeJS {
         interface ProcessEnv {
             PREFIX: string
+            DISCORD_CLIENT_ID: string
             DISCORD_TOKEN: string
             DISCORD_OWNER_ID: string
             YOUTUBE_API_KEY: string
