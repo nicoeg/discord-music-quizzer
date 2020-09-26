@@ -42,7 +42,7 @@ export class MusicQuiz {
         )
 
         if (!this.songs || this.songs.length === 0) {
-            if (this.songs.length === 0) {
+            if (this.songs && this.songs.length === 0) {
                 await this.textChannel.send('Playlist contains no songs')
             }
 
