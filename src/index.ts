@@ -68,5 +68,11 @@ client.once('ready', () => {
     console.log('Ready!')
     client.user.setActivity('Ready to quiz')
 })
+client.on("error", (e) => console.error('Discord error', e))
+client.on("warn", (e) => console.warn('Discord warn', e))
+client.on("debug", (e) => console.info('Discord debug', e))
+client.on("disconnect", (e) => console.info('Discord disconnect event', e))
+client.on("reconnecting", (e: any) => console.info('Discord reconnecting event', e))
+client.on("resume", (e: any) => console.info('Discord resume event', e))
 
 client.login(process.env.DISCORD_TOKEN)
