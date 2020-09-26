@@ -8,6 +8,9 @@ import { Song } from 'song'
 import { VoiceConnection } from 'discord.js'
 import internal from 'stream'
 
+const stopCommand = '!stop'
+const skipCommand = '!skip'
+
 export class MusicQuiz {
     guild: Guild
     textChannel: TextChannel|DMChannel
@@ -38,7 +41,11 @@ export class MusicQuiz {
             parseInt(this.arguments.songs, 10)
         )
 
-        if (!this.songs) {
+        if (!this.songs || this.songs.length === 0) {
+            if (this.songs.length === 0) {
+                await this.textChannel.send('Playlist contains no songs')
+            }
+
             this.finish()
 
             return
@@ -62,8 +69,8 @@ export class MusicQuiz {
 
             ${this.pointText()}
 
-            Type \`!skip\` to vote for continuing to the next song.
-            Type \`!stop\` to stop the quiz.
+            Type \`${stopCommand}\` to vote for continuing to the next song.
+            Type \`${skipCommand}\` to stop the quiz.
 
             - GLHF :microphone:
         `.replace(/  +/g, ''))
@@ -104,14 +111,14 @@ export class MusicQuiz {
 
     async handleMessage(message: CommandoMessage) {
         const content = message.content.toLowerCase()
-        if (content === '!stop') {
+        if (content === stopCommand) {
             await this.printStatus('Quiz stopped!')
             await this.finish()
 
             return
         }
 
-        if (content === '!skip') {
+        if (content === skipCommand) {
             await this.handleSkip(message.author.id)
 
             return
