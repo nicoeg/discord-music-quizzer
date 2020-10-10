@@ -91,7 +91,6 @@ export class MusicQuiz {
         }
 
         const song = this.songs[this.currentSong]
-
         const link = await this.findSong(song)
         if (!link) {
             this.nextSong('Could not find the song on Youtube. Skipping to next.')
@@ -99,14 +98,36 @@ export class MusicQuiz {
             return
         }
 
-        this.musicStream = await ytdl(link)
+        try {
+            this.musicStream = await ytdl(link)
+        } catch (e) {
+            console.error(e);
+
+            this.nextSong('Could not stream the song from Youtube. Skipping to next.')
+
+            return
+        }
+
         this.songTimeout = setTimeout(() => {
             this.nextSong('Song was not guessed in time')
         }, 1000 * 60);
 
-        this.connection
-            .play(this.musicStream, { type: 'opus', volume: .5 })
-            .on('finish', () => this.finish())
+        try {
+            this.connection
+                .play(this.musicStream, { type: 'opus', volume: .5 })
+                .on('error', () => {
+                    this.textChannel.send('Connection got interrupted. Please try again')
+
+                    this.finish()
+                })
+                .on('finish', () => this.finish())
+        } catch (e) {
+            console.error(e);
+
+            this.textChannel.send('Connection got interrupted. Please try again')
+
+            this.finish()
+        }
     }
 
     async handleMessage(message: CommandoMessage) {
