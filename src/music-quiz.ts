@@ -7,6 +7,7 @@ import Youtube from 'scrape-youtube'
 import { Song } from 'song'
 import { VoiceConnection } from 'discord.js'
 import internal from 'stream'
+import { StreamDispatcher } from 'discord.js';
 
 const stopCommand = '!stop'
 const skipCommand = '!skip'
@@ -25,6 +26,7 @@ export class MusicQuiz {
     artistGuessed: boolean
     titleGuessed: boolean
     musicStream: internal.Readable
+    voiceStream: StreamDispatcher
     songTimeout: NodeJS.Timeout
     reactPermissionNotified: boolean = false
 
@@ -113,14 +115,15 @@ export class MusicQuiz {
         }, 1000 * 60);
 
         try {
-            this.connection
-                .play(this.musicStream, { type: 'opus', volume: .5 })
-                .on('error', () => {
+            this.voiceStream = this.connection.play(this.musicStream, { type: 'opus', volume: .5 })
+
+            this.voiceStream.on('error', () => {
                     this.textChannel.send('Connection got interrupted. Please try again')
 
                     this.finish()
                 })
-                .on('finish', () => this.finish())
+            this.voiceStream.on('finish', () => this.finish())
+            this.voiceStream
         } catch (e) {
             console.error(e);
 
@@ -194,6 +197,7 @@ export class MusicQuiz {
     async finish() {
         if (this.songTimeout) clearTimeout(this.songTimeout)
         if (this.messageCollector) this.messageCollector.stop()
+        if (this.voiceStream) this.voiceStream.destroy()
         if (this.musicStream) this.musicStream.destroy()
 
         if (this.guild.quiz) this.guild.quiz = null
@@ -211,6 +215,7 @@ export class MusicQuiz {
         this.currentSong++
         this.skippers = []
         if (this.musicStream) this.musicStream.destroy()
+        if (this.voiceStream) this.voiceStream.destroy()
         this.startPlaying()
     }
 
