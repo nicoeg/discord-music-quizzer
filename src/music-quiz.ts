@@ -1,20 +1,22 @@
 import { MessageCollector, VoiceChannel, TextChannel, Guild, DMChannel } from 'discord.js';
 import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
-import { CommandoMessage } from 'discord.js-commando'
+import { CommandMessage } from 'discord.js-commando'
 import Spotify from './spotify'
 import Youtube from 'scrape-youtube'
 import { Song } from 'song'
 import { VoiceConnection } from 'discord.js'
 import internal from 'stream'
 import { StreamDispatcher } from 'discord.js';
+import { Message } from 'discord.js';
+import { GroupDMChannel } from 'discord.js';
 
 const stopCommand = '!stop'
 const skipCommand = '!skip'
 
 export class MusicQuiz {
     guild: Guild
-    textChannel: TextChannel|DMChannel
+    textChannel: TextChannel|DMChannel|GroupDMChannel
     voiceChannel: VoiceChannel
     messageCollector: MessageCollector
     arguments: QuizArgs
@@ -30,10 +32,10 @@ export class MusicQuiz {
     songTimeout: NodeJS.Timeout
     reactPermissionNotified: boolean = false
 
-    constructor(message: CommandoMessage, args: QuizArgs) {
+    constructor(message: CommandMessage, args: QuizArgs) {
         this.guild = message.guild
         this.textChannel = message.channel
-        this.voiceChannel = message.member.voice.channel
+        this.voiceChannel = message.member.voiceChannel
         this.arguments = args
     }
 
@@ -79,7 +81,7 @@ export class MusicQuiz {
         this.startPlaying()
 
         this.messageCollector = this.textChannel
-            .createMessageCollector((message: CommandoMessage) => !message.author.bot)
+            .createMessageCollector((message: CommandMessage) => !message.author.bot)
             .on('collect', message => this.handleMessage(message))
     }
 
@@ -115,7 +117,7 @@ export class MusicQuiz {
         }, 1000 * 60);
 
         try {
-            this.voiceStream = this.connection.play(this.musicStream, { type: 'opus', volume: .5 })
+            this.voiceStream = this.connection.playOpusStream(this.musicStream, { volume: .5 })
 
             this.voiceStream.on('error', () => {
                     this.textChannel.send('Connection got interrupted. Please try again')
@@ -133,7 +135,7 @@ export class MusicQuiz {
         }
     }
 
-    async handleMessage(message: CommandoMessage) {
+    async handleMessage(message: Message) {
         const content = message.content.toLowerCase()
         if (content === stopCommand) {
             await this.printStatus('Quiz stopped!')
@@ -197,7 +199,7 @@ export class MusicQuiz {
     async finish() {
         if (this.songTimeout) clearTimeout(this.songTimeout)
         if (this.messageCollector) this.messageCollector.stop()
-        if (this.voiceStream) this.voiceStream.destroy()
+        if (this.voiceStream) this.voiceStream.end()
         if (this.musicStream) this.musicStream.destroy()
 
         if (this.guild.quiz) this.guild.quiz = null
@@ -215,7 +217,7 @@ export class MusicQuiz {
         this.currentSong++
         this.skippers = []
         if (this.musicStream) this.musicStream.destroy()
-        if (this.voiceStream) this.voiceStream.destroy()
+        if (this.voiceStream) this.voiceStream.end()
         this.startPlaying()
     }
 
@@ -251,7 +253,7 @@ export class MusicQuiz {
             .join('\n')
     }
 
-    async reactToMessage(message: CommandoMessage, emoji: string) {
+    async reactToMessage(message: Message, emoji: string) {
         try {
             await message.react(emoji)
         } catch (e) {

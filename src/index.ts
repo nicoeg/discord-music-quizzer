@@ -1,5 +1,5 @@
 import { MusicQuizCommand } from './commands'
-import { Structures, Guild } from 'discord.js'
+import { Guild } from 'discord.js'
 import { CommandoClient } from 'discord.js-commando'
 import { config } from 'dotenv'
 import { MusicQuiz } from './music-quiz'
@@ -46,13 +46,17 @@ if (process.env.SENTRY_DSN) {
     })
 }
 
-Structures.extend('Guild', Guild => {
+class MusicGuild extends Guild {
+    quiz: MusicQuiz
+}
+
+/*Structures.extend('Guild', Guild => {
     class MusicGuild extends Guild {
         quiz: MusicQuiz
     }
 
     return MusicGuild
-})
+})*/
 
 const client = new CommandoClient({
     commandPrefix: process.env.PREFIX,

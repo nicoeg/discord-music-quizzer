@@ -1,6 +1,6 @@
 import { MusicQuiz } from './music-quiz';
 import { QuizArgs } from './types/quiz-args';
-import { Command, CommandoClient, CommandoMessage } from "discord.js-commando"
+import { Command, CommandoClient, CommandMessage } from "discord.js-commando"
 import { Message } from "discord.js"
 
 export class MusicQuizCommand extends Command {
@@ -28,19 +28,18 @@ export class MusicQuizCommand extends Command {
                     key: 'only',
                     prompt: 'Only this answer is required; artist, title or both',
                     type: 'string',
-                    oneOf: ['artist', 'title', 'both'],
                     default: 'both'
                 }
             ]
         })
     }
 
-    async run(message: CommandoMessage, args: QuizArgs, fromPattern: boolean): Promise<Message | Message[]> {
+    async run(message: CommandMessage, args: QuizArgs, fromPattern: boolean): Promise<Message | Message[]> {
         if (message.guild.quiz) {
             return message.say('Quiz is already running')
         }
 
-        if (message.member.voice.channel === null) {
+        if (message.member.voiceChannel === null) {
             return message.say('Please join a voice channel and try again')
         }
 

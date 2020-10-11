@@ -11,21 +11,21 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/opus": "^0.3.2",
-    "@sentry/integrations": "^5.24.2",
-    "@sentry/node": "^5.24.2",
-    "discord.js": "^12.3.1",
-    "discord.js-commando": "git+https://github.com/discordjs/Commando.git",
+    "@sentry/integrations": "^5.25.0",
+    "@sentry/node": "^5.25.0",
+    "discord.js": "11.6.4",
+    "discord.js-commando": "git+https://github.com/discordjs/Commando.git#deff2eb9bfc8308f0bfa6ee8ddbc847fec9ddadb",
     "dotenv": "^8.2.0",
-    "scrape-youtube": "^0.2.3",
+    "scrape-youtube": "^0.2.4",
     "simple-youtube-api": "^5.2.1",
     "spotify-web-api-node": "^4.0.0",
     "ytdl-core-discord": "^1.2.3"
   },
   "devDependencies": {
-    "@types/node": "^13.13.21",
+    "@types/node": "^13.13.25",
     "@types/request": "^2.48.5",
     "@types/spotify-web-api-node": "^4.0.1",
-    "@types/ws": "^7.2.6",
+    "@types/ws": "^7.2.7",
     "esbuild": "^0.2.12",
     "opusscript": "0.0.7",
     "typescript": "^3.9.7"
