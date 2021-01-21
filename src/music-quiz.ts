@@ -8,13 +8,14 @@ import { Song } from 'song'
 import { VoiceConnection } from 'discord.js'
 import internal from 'stream'
 import { StreamDispatcher } from 'discord.js';
+import { NewsChannel } from 'discord.js';
 
 const stopCommand = '!stop'
 const skipCommand = '!skip'
 
 export class MusicQuiz {
     guild: Guild
-    textChannel: TextChannel|DMChannel
+    textChannel: TextChannel | DMChannel | NewsChannel
     voiceChannel: VoiceChannel
     messageCollector: MessageCollector
     arguments: QuizArgs
@@ -295,6 +296,7 @@ export class MusicQuiz {
 
     async findSong(song: Song): Promise<string> {
         try {
+            // const result = await ytsr(`${song.title} - ${song.artist}`, { limit: 1 })
             const result = await Youtube.searchOne(`${song.title} - ${song.artist}`)
 
             return result?.link ?? null

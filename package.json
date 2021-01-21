@@ -10,16 +10,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@discordjs/opus": "^0.3.2",
+    "@discordjs/opus": "^0.3.3",
     "@sentry/integrations": "^5.24.2",
     "@sentry/node": "^5.24.2",
-    "discord.js": "^12.3.1",
-    "discord.js-commando": "git+https://github.com/discordjs/Commando.git",
+    "discord.js": "^12.5.1",
+    "discord.js-commando": "0.11.1",
     "dotenv": "^8.2.0",
-    "scrape-youtube": "^0.2.3",
-    "simple-youtube-api": "^5.2.1",
+    "ffmpeg-static": "^4.2.7",
+    "scrape-youtube": "^0.2.6",
     "spotify-web-api-node": "^4.0.0",
-    "ytdl-core-discord": "^1.2.3"
+    "ytdl-core-discord": "^1.2.5"
   },
   "devDependencies": {
     "@types/node": "^13.13.21",
