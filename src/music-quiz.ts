@@ -1,14 +1,12 @@
-import { MessageCollector, VoiceChannel, TextChannel, Guild, DMChannel } from 'discord.js';
+import { MessageCollector, VoiceChannel, TextChannel, Guild, DMChannel, StreamDispatcher, NewsChannel, VoiceConnection } from 'discord.js';
 import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
 import { CommandoMessage } from 'discord.js-commando'
 import Spotify from './spotify'
 import { Youtube } from './youtube'
 import { Song } from 'song'
-import { VoiceConnection } from 'discord.js'
 import internal from 'stream'
-import { StreamDispatcher } from 'discord.js';
-import { NewsChannel } from 'discord.js';
+import { MinigetError } from 'miniget'
 
 const stopCommand = '!stop'
 const skipCommand = '!skip'
@@ -106,6 +104,12 @@ export class MusicQuiz {
             this.musicStream = await ytdl(link)
         } catch (e) {
             console.error(e);
+
+            if (e instanceof MinigetError) {
+                this.textChannel.send('Sorry... Youtube has blocked me. Please try again later')
+
+                return this.finish()
+            }
 
             this.nextSong('Could not stream the song from Youtube. Skipping to next.')
 
