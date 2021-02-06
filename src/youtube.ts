@@ -2,6 +2,11 @@ import axios from "axios"
 
 export class Youtube {
     proxies = [
+        'https://europe-west1-coronja.cloudfunctions.net/youtubewest1',
+        'https://europe-west2-coronja.cloudfunctions.net/youtubewest2',
+        'https://us-central1-coronja.cloudfunctions.net/youtubeusc1',
+        'https://us-east1-coronja.cloudfunctions.net/youtubeuseast1',
+        'https://us-east4-coronja.cloudfunctions.net/youtubeuseast4',
         'https://5sul8j4bba.execute-api.eu-west-1.amazonaws.com/default/youtube-seach-eu-west-1',
         'https://kmoyvpwbc9.execute-api.eu-central-1.amazonaws.com/default/youtube-seach-eu-central-1',
         'https://bbldn5w9q1.execute-api.eu-west-2.amazonaws.com/default/youtube-search-eu-west-2'
