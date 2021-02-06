@@ -1,3 +1,5 @@
+import axios from "axios"
+
 export class Youtube {
     proxies = [
         'https://5sul8j4bba.execute-api.eu-west-1.amazonaws.com/default/youtube-seach-eu-west-1',
@@ -7,15 +9,19 @@ export class Youtube {
     currentProxy = 0
     fails = 0
 
-    async findSong(query: string): Promise<string> {
+    async findSong(query: string): Promise<string | null> {
         const proxy = this.proxies[this.currentProxy]
         try {
-            const result = await fetch(`${proxy}?search=${query}`)
-            const data = await result.json()
+            const result = await axios(proxy, { params: { search: query } })
             this.fails = 0
 
-            return data.item.url
+            if (result.status === 404) {
+                return null
+            }
+
+            return result.data.item.url
         } catch (error) {
+            console.log(error);
             if (this.fails >= this.proxies.length) {
                 throw new Error('Youtube fuck')
             }

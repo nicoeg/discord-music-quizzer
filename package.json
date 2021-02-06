@@ -13,6 +13,7 @@
     "@discordjs/opus": "^0.3.3",
     "@sentry/integrations": "^5.24.2",
     "@sentry/node": "^5.24.2",
+    "axios": "^0.21.1",
     "discord.js": "^12.5.1",
     "discord.js-commando": "0.11.1",
     "dotenv": "^8.2.0",
