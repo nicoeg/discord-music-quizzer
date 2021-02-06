@@ -3,7 +3,7 @@ import ytdl from 'ytdl-core-discord'
 import { QuizArgs } from './types/quiz-args'
 import { CommandoMessage } from 'discord.js-commando'
 import Spotify from './spotify'
-import Youtube from 'scrape-youtube'
+import { Youtube } from './youtube'
 import { Song } from 'song'
 import { VoiceConnection } from 'discord.js'
 import internal from 'stream'
@@ -30,6 +30,7 @@ export class MusicQuiz {
     voiceStream: StreamDispatcher
     songTimeout: NodeJS.Timeout
     reactPermissionNotified: boolean = false
+    youtube = new Youtube()
 
     constructor(message: CommandoMessage, args: QuizArgs) {
         this.guild = message.guild
@@ -296,10 +297,9 @@ export class MusicQuiz {
 
     async findSong(song: Song): Promise<string> {
         try {
-            // const result = await ytsr(`${song.title} - ${song.artist}`, { limit: 1 })
-            const result = await Youtube.searchOne(`${song.title} - ${song.artist}`)
+            const result = await this.youtube.findSong(`${song.title} - ${song.artist}`)
 
-            return result?.link ?? null
+            return result
         } catch (e) {
             await this.textChannel.send('Oh no... Youtube police busted the party :(\nPlease try again later.')
             this.finish()
