@@ -63,7 +63,7 @@ export class MusicQuiz {
 
         //  randomize order and limit songs to this.arguments.songs
         var songs = parseInt(this.arguments.songs)
-        this.songs = this.songs.sort(() => Math.random() - 0.5).slice(0, songs)
+        this.songs = this.songs.sort(() => Math.random() > 0.5 ? 1 : -1).slice(0, songs)
 
         try {
             this.connection = await this.voiceChannel.join()
