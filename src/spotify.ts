@@ -13,8 +13,10 @@ export default class Spotify {
 
     }
 
-    async getPlaylist(id: string) {
-        const result = await this.client.getPlaylistTracks(id)
+    async getPlaylist(id: string, offset: number) {
+        const result = await this.client.getPlaylistTracks(id, {
+            offset: offset,
+        });
 
         return result.body.items.map(({ track }) => track)
     }

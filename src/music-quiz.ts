@@ -39,10 +39,17 @@ export class MusicQuiz {
     }
 
     async start() {
-        this.songs = await this.getSongs(
-            this.arguments.playlist,
-            parseInt(this.arguments.songs, 10)
-        )
+        this.songs = await this.getSongs(this.arguments.playlist, 0)
+
+        while(true) {
+            if (this.songs.length % 100 === 0) {
+                // basically if the playlist has hit the limit (100,200,300,400,500, etc) then grab the next 100 songs using offset
+                const songs = await this.getSongs(this.arguments.playlist, this.songs.length)
+                this.songs = this.songs.concat(songs)
+            } else {
+                break
+            }
+        }
 
         if (!this.songs || this.songs.length === 0) {
             if (this.songs && this.songs.length === 0) {
@@ -53,6 +60,10 @@ export class MusicQuiz {
 
             return
         }
+
+        //  randomize order and limit songs to this.arguments.songs
+        var songs = parseInt(this.arguments.songs)
+        this.songs = this.songs.sort(() => Math.random() > 0.5 ? 1 : -1).slice(0, songs)
 
         try {
             this.connection = await this.voiceChannel.join()
@@ -69,12 +80,9 @@ export class MusicQuiz {
             **Let's get started**! :headphones: :tada:
             **${this.songs.length}** songs have been selected randomly from the playlist.
             You have one minute to guess each song.
-
             ${this.pointText()}
-
             Type \`${stopCommand}\` to vote for continuing to the next song.
             Type \`${skipCommand}\` to stop the quiz.
-
             - GLHF :microphone:
         `.replace(/  +/g, ''))
         this.startPlaying()
@@ -270,17 +278,14 @@ export class MusicQuiz {
 
     }
 
-    async getSongs(playlist: string, amount: number): Promise<Song[]> {
+    async getSongs(playlist: string, offset: number): Promise<Song[]> {
         const spotify = new Spotify()
         await spotify.authorize()
         if (playlist.includes('spotify.com/playlist')) {
             playlist = playlist.match(/playlist\/([^?]+)/)[1] || playlist
         }
-
         try {
-            return (await spotify.getPlaylist(playlist))
-                .sort(() => Math.random() > 0.5 ? 1 : -1)
-                .filter((song, index) => index < amount)
+            return (await spotify.getPlaylist(playlist, offset))
                 .map(song => ({
                     link: `https://open.spotify.com/track/${song.id}`,
                     previewUrl: song.preview_url,
