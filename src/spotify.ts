@@ -14,8 +14,19 @@ export default class Spotify {
     }
 
     async getPlaylist(id: string) {
-        const result = await this.client.getPlaylistTracks(id)
+        let finished = false
+        let offset = 0
+        const tracks = []
 
-        return result.body.items.map(({ track }) => track)
+        while (finished) {
+            const result = await this.client.getPlaylistTracks(id, { offset, limit: 100 })
+            tracks = tracks.concat(result.body.items.map(({ track }) => track))
+
+            offset += 100
+            finished = tracks.length >= result.total
+        }
+
+        console.log('tracks ' + tracks.length);
+        return tracks
     }
 }
