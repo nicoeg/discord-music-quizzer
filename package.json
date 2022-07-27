@@ -10,16 +10,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@discordjs/opus": "^0.3.3",
     "@sentry/integrations": "^5.24.2",
     "@sentry/node": "^5.24.2",
     "discord.js": "^12.5.1",
     "discord.js-commando": "0.11.1",
     "dotenv": "^8.2.0",
     "ffmpeg-static": "^4.2.7",
-    "scrape-youtube": "^0.2.6",
+    "opusscript": "^0.0.7",
     "spotify-web-api-node": "^4.0.0",
-    "ytdl-core-discord": "^1.2.5"
+    "ytdl-core-discord": "^1.2.5",
+    "ytsr": "^3.8.0"
   },
   "devDependencies": {
     "@types/node": "^13.13.21",
@@ -27,7 +27,6 @@
     "@types/spotify-web-api-node": "^4.0.1",
     "@types/ws": "^7.2.6",
     "esbuild": "^0.2.12",
-    "opusscript": "0.0.7",
     "typescript": "^3.9.7"
   }
 }
